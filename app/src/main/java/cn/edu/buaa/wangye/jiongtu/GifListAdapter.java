@@ -120,7 +120,7 @@ public class GifListAdapter extends BaseAdapter {
 
             Picasso.with(mContext)
                     .load(item.getLargeUrl())
-                    .resize(deviceWidth, deviceWidth * item.getLargeHeight() / item.getLargeWidth())
+                    .resize(deviceWidth, height)
                     .into(im, new Callback() {
                         @Override
                         public void onSuccess() {
