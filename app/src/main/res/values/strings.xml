@@ -12,5 +12,8 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_example">Example action</string>
     <string name="action_settings">Settings</string>
+    <string name="action_newest">最新囧图</string>
+    <string name="action_dayhot">今日热门</string>
+    <string name="action_weekhot">本周热门</string>
 
 </resources>

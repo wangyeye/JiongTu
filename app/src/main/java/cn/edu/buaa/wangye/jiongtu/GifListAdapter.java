@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
@@ -67,12 +68,20 @@ public class GifListAdapter extends BaseAdapter {
 		}
 
         final Datum item = gifItemList.get(position);
-		holder.text.setText(item.getDescription());
+        final ImageView im = holder.gif;
+        final GifImageView gim = holder.gif2;
+
+        holder.text.setText(item.getDescription());
         if(item.getFormat().equalsIgnoreCase("GIF")){
-            final GifImageView gim = holder.gif2;
             ViewGroup.LayoutParams lp = gim.getLayoutParams();
             lp.width = deviceWidth;
             lp.height = deviceWidth * item.getLargeHeight() / item.getLargeWidth();
+            try {
+                GifDrawable gd = new GifDrawable(mContext.getResources(), R.drawable.loading);
+                gim.setImageDrawable(gd);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             gim.setVisibility(View.VISIBLE);
 
             AsyncImageLoader.createObject().loadInputStream(item.getLargeUrl(), new AsyncImageLoader.FileCallback2() {
@@ -88,16 +97,36 @@ public class GifListAdapter extends BaseAdapter {
             });
             holder.gif.setVisibility(View.GONE);
         }else{
-            final ImageView im = holder.gif;
             ViewGroup.LayoutParams lp = im.getLayoutParams();
             lp.width = deviceWidth;
             lp.height = deviceWidth * item.getLargeHeight() / item.getLargeWidth();
-            im.setVisibility(View.VISIBLE);
+            im.setVisibility(View.GONE);
+            ViewGroup.LayoutParams lp2 = gim.getLayoutParams();
+            lp2.width = deviceWidth;
+            lp2.height = deviceWidth * item.getLargeHeight() / item.getLargeWidth();
+            try {
+                GifDrawable gd = new GifDrawable(mContext.getResources(), R.drawable.loading);
+                gim.setImageDrawable(gd);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            gim.setVisibility(View.VISIBLE);
+
             Picasso.with(mContext)
                     .load(item.getLargeUrl())
                     .resize(deviceWidth, deviceWidth * item.getLargeHeight() / item.getLargeWidth())
-                    .into(im);
-            holder.gif2.setVisibility(View.GONE);
+                    .into(im, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            gim.setVisibility(View.GONE);
+                            im.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onError() {
+
+                        }
+                    });
         }
 
 

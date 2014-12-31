@@ -2,6 +2,7 @@ package cn.edu.buaa.wangye.jiongtu;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
@@ -41,6 +42,9 @@ public class MainActivity extends ActionBarActivity
     private GifListAdapter gifListAdapter;
     private GifListService service;
 
+    private String tag = "";
+    private String sort = "recent";
+    private String day = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,33 +71,24 @@ public class MainActivity extends ActionBarActivity
         service = restAdapter.create(GifListService.class);
 
         listView.setOnScrollListener(new AbsListView.OnScrollListener() {
-            private boolean state_idle = false;
+            private int lastItemIndex;//当前ListView中最后一个Item的索引
 
-            public void onScroll(AbsListView view, int firstVisibleItem,
-                                 int visibleItemCount, int totalItemCount) {
-
-                if (!this.state_idle)
-                    return;
-
-                if (firstVisibleItem == 0
-                        || (firstVisibleItem + visibleItemCount) != totalItemCount) {
-                    return;
+            //当ListView不在滚动，并且ListView的最后一项的索引等于adapter的项数减一时则自动加载（因为索引是从0开始的）
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE
+                        && lastItemIndex == gifListAdapter.getCount() - 1) {
+                    //加载数据代码，此处省略了
+                    loadMore();
                 }
-
-                loadMore();
             }
 
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-
-                if (AbsListView.OnScrollListener.SCROLL_STATE_IDLE != scrollState) {
-                    return;
-                }
-
-                if (0 != scrollState)
-                    return;
-
-                this.state_idle = true;
-
+            //这三个int类型的参数可以自行Log打印一下就知道是什么意思了
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem,
+                                 int visibleItemCount, int totalItemCount) {
+                //ListView 的FooterView也会算到visibleItemCount中去，所以要再减去一
+                lastItemIndex = firstVisibleItem + visibleItemCount - 1;
             }
         });
 
@@ -110,20 +105,21 @@ public class MainActivity extends ActionBarActivity
             }
         });
 
-
-
         reFresh();
     }
 
 
     private void reFresh() {
-        service.reFresh(new Callback<GifItem>() {
+        swipeView.setRefreshing(true);
+
+        service.reFresh(sort, tag, day, new Callback<GifItem>() {
             @Override
             public void success(GifItem gifItem, Response response) {
                 gifItemList.clear();
                 gifItemList.addAll(gifItem.getData());
                 gifListAdapter.notifyDataSetChanged();
                 swipeView.setRefreshing(false);
+                listView.setSelectionAfterHeaderView();
             }
 
             @Override
@@ -134,7 +130,9 @@ public class MainActivity extends ActionBarActivity
     }
 
     private void loadMore() {
-        service.loadMore(gifItemList.get(gifItemList.size()-1).getBehotTime().toString(), new Callback<GifItem>() {
+        String time = gifItemList.get(gifItemList.size()-1).getBehotTime().toString();
+        System.out.println(time);
+        service.loadMore(sort, time, tag, day, new Callback<GifItem>() {
             @Override
             public void success(GifItem gifItem, Response response) {
                 gifItemList.addAll(gifItem.getData());
@@ -152,28 +150,31 @@ public class MainActivity extends ActionBarActivity
     @Override
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
-
-    }
-
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
+        switch (position){
+            case 0:
+                tag = "";
                 mTitle = getString(R.string.title_section1);
                 break;
-            case 2:
+            case 1:
+                tag = "heavy";
                 mTitle = getString(R.string.title_section2);
                 break;
-            case 3:
+            case 2:
+                tag = "comic";
                 mTitle = getString(R.string.title_section3);
                 break;
-            case 4:
+            case 3:
+                tag = "meng";
                 mTitle = getString(R.string.title_section4);
                 break;
-            case 5:
+            case 4:
+                tag = "gif";
                 mTitle = getString(R.string.title_section5);
                 break;
         }
+        myHandler.sendEmptyMessage(0);
     }
+
 
     public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
@@ -204,12 +205,30 @@ public class MainActivity extends ActionBarActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_newest) {
+            sort = "recent";
+            day = "";
+            myHandler.sendEmptyMessage(0);
+            return true;
+        }else if(id == R.id.action_dayhot){
+            sort = "top";
+            day = "1";
+            myHandler.sendEmptyMessage(0);
+            return true;
+        }else if(id == R.id.action_weekhot){
+            sort = "top";
+            day = "7";
+            myHandler.sendEmptyMessage(0);
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
-
+    Handler myHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            reFresh();
+            super.handleMessage(msg);
+        }
+    };
 }

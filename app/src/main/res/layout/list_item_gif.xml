@@ -3,6 +3,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:padding="10dp"
+    android:background="@android:color/white"
     android:orientation="vertical" >
 
     <ImageView
@@ -15,7 +16,8 @@
         android:id="@+id/list_item_gif2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
+        android:src="@drawable/loading"
+        android:visibility="visible"
         />
 
     <TextView
