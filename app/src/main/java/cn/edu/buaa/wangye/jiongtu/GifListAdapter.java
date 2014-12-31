@@ -72,10 +72,16 @@ public class GifListAdapter extends BaseAdapter {
         final GifImageView gim = holder.gif2;
 
         holder.text.setText(item.getDescription());
+
+        int height = deviceWidth * item.getLargeHeight() / item.getLargeWidth();
+        if(height > 4096){
+            height = 4096;
+        }
+
         if(item.getFormat().equalsIgnoreCase("GIF")){
             ViewGroup.LayoutParams lp = gim.getLayoutParams();
             lp.width = deviceWidth;
-            lp.height = deviceWidth * item.getLargeHeight() / item.getLargeWidth();
+            lp.height = height;
             try {
                 GifDrawable gd = new GifDrawable(mContext.getResources(), R.drawable.loading);
                 gim.setImageDrawable(gd);
@@ -99,11 +105,11 @@ public class GifListAdapter extends BaseAdapter {
         }else{
             ViewGroup.LayoutParams lp = im.getLayoutParams();
             lp.width = deviceWidth;
-            lp.height = deviceWidth * item.getLargeHeight() / item.getLargeWidth();
+            lp.height = height;
             im.setVisibility(View.GONE);
             ViewGroup.LayoutParams lp2 = gim.getLayoutParams();
             lp2.width = deviceWidth;
-            lp2.height = deviceWidth * item.getLargeHeight() / item.getLargeWidth();
+            lp2.height = height;
             try {
                 GifDrawable gd = new GifDrawable(mContext.getResources(), R.drawable.loading);
                 gim.setImageDrawable(gd);
